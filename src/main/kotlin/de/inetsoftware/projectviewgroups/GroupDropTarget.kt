@@ -9,6 +9,7 @@ import com.intellij.ide.projectView.ProjectView
 import com.intellij.ide.projectView.impl.AbstractProjectViewPane
 import com.intellij.ide.projectView.impl.ProjectViewListener
 import com.intellij.ide.util.treeView.AbstractTreeNode
+import com.intellij.openapi.application.EDT
 import com.intellij.openapi.application.runReadActionBlocking
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
@@ -19,10 +20,10 @@ import com.intellij.ui.awt.RelativeRectangle
 import com.intellij.util.ui.tree.TreeUtil
 import java.awt.Image
 import java.awt.Point
+import java.awt.Rectangle
 import javax.swing.JComponent
 import javax.swing.JTree
 import javax.swing.tree.TreePath
-import com.intellij.openapi.application.EDT
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -33,7 +34,7 @@ import kotlinx.coroutines.withContext
  */
 class GroupDropTarget(private val project: Project, private val tree: JTree, private val delegate: DnDTarget?) : DnDNativeTarget {
 
-    private class Plan(val selection: GroupSelection, val targetId: String?, val text: String, val bounds: java.awt.Rectangle)
+    private class Plan(val selection: GroupSelection, val targetId: String?, val text: String, val bounds: Rectangle)
 
     override fun update(event: DnDEvent): Boolean {
         val plan = plan(event) ?: return delegate?.update(event) ?: run { event.setDropPossible(false, ""); false }

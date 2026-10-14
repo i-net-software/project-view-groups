@@ -10,6 +10,7 @@ import com.intellij.openapi.ui.InputValidator
 import com.intellij.openapi.ui.Messages
 import com.intellij.ui.CheckBoxList
 import com.intellij.ui.ColoredTreeCellRenderer
+import com.intellij.ui.DocumentAdapter
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.SearchTextField
 import com.intellij.ui.SimpleTextAttributes
@@ -70,7 +71,7 @@ class ManageGroupsDialog(private val project: Project, private val initialGroup:
             tree.repaint()
             projectList.repaint()
         }
-        filter.addDocumentListener(object : com.intellij.ui.DocumentAdapter() {
+        filter.addDocumentListener(object : DocumentAdapter() {
             override fun textChanged(e: DocumentEvent) = refreshProjects()
         })
         rebuildTree(initialGroup)

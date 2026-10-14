@@ -1,13 +1,16 @@
 package de.inetsoftware.projectviewgroups
 
 import com.intellij.ide.projectView.ViewSettings
+import com.intellij.ide.projectView.impl.PackageViewPane
 import com.intellij.ide.projectView.impl.nodes.PackageViewProjectNode
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.ide.util.treeView.AbstractTreeStructure
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.projectView.TestProjectTreeStructure
+import com.intellij.psi.PsiDirectory
 import com.intellij.testFramework.HeavyPlatformTestCase
 import com.intellij.testFramework.PsiTestUtil
 
@@ -98,11 +101,7 @@ class GroupTreeStructureTest : HeavyPlatformTestCase() {
             model.create("Clear", id = "clr")
             model.assign(listOf(key("clear-core")), "clr")
         }
-        val pane = object : com.intellij.ide.projectView.impl.PackageViewPane(project) {
-            fun structure() = createStructure()
-        }
-        com.intellij.openapi.util.Disposer.register(testRootDisposable, pane)
-        val text = dump(pane.structure())
+        val text = dump(packagesPaneStructure())
         assertTrue(text, text.contains("\n [group] Clear\n  clear-core\n"))
     }
 
@@ -128,11 +127,7 @@ class GroupTreeStructureTest : HeavyPlatformTestCase() {
             model.create("Clear Reports", id = "cr")
             model.assign(listOf(build.path), "cr")
         }
-        val pane = object : com.intellij.ide.projectView.impl.PackageViewPane(project) {
-            fun structure() = createStructure()
-        }
-        com.intellij.openapi.util.Disposer.register(testRootDisposable, pane)
-        val text = dump(pane.structure())
+        val text = dump(packagesPaneStructure())
         assertTrue(text, text.contains("\n [group] Clear Reports\n  ccbase\n"))
         assertFalse(text, Regex("\n ccbase\n").containsMatchIn(text))
     }
@@ -141,7 +136,7 @@ class GroupTreeStructureTest : HeavyPlatformTestCase() {
         groups().update { it.create("Reporting", id = "rep") }
         val structure = TestProjectTreeStructure(project, testRootDisposable)
         val top = structure.getChildElements(structure.rootElement).map { it as AbstractTreeNode<*> }
-        val core = top.single { (it.value as? com.intellij.psi.PsiDirectory)?.name == "report-core" }
+        val core = top.single { (it.value as? PsiDirectory)?.name == "report-core" }
         assertTrue(ProjectNodes.isProjectNode(core))
         assertEquals(key("report-core"), ProjectNodes.keyOf(core))
         assertFalse(ProjectNodes.isProjectNode(top.filterIsInstance<GroupNode>().single()))
@@ -150,6 +145,15 @@ class GroupTreeStructureTest : HeavyPlatformTestCase() {
     fun testCandidatesAreTopLevelContentRoots() {
         val candidates = ProjectNodes.candidates(project, GroupModel())
         for (name in dirs.keys) assertTrue(candidates.toString(), key(name) in candidates)
+    }
+
+    /** The structure of the real Packages view. */
+    private fun packagesPaneStructure(): AbstractTreeStructure {
+        val pane = object : PackageViewPane(project) {
+            fun structure() = createStructure()
+        }
+        Disposer.register(testRootDisposable, pane)
+        return pane.structure()
     }
 
     /** Two levels of the tree, one node per line, groups marked with `[group]`. */
