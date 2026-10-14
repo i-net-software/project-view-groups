@@ -93,6 +93,50 @@ class GroupTreeStructureTest : HeavyPlatformTestCase() {
         assertTrue(text, text.contains("\n helpdesk\n"))
     }
 
+    fun testRealPackagesPaneGroupsModules() {
+        groups().update { model ->
+            model.create("Clear", id = "clr")
+            model.assign(listOf(key("clear-core")), "clr")
+        }
+        val pane = object : com.intellij.ide.projectView.impl.PackageViewPane(project) {
+            fun structure() = createStructure()
+        }
+        com.intellij.openapi.util.Disposer.register(testRootDisposable, pane)
+        val text = dump(pane.structure())
+        assertTrue(text, text.contains("\n [group] Clear\n  clear-core\n"))
+    }
+
+    /** Gradle-like build: root module plus source set modules, shown as one module group in Packages. */
+    fun testPackagesViewGroupsGradleModuleGroups() {
+        val build = runWriteAction {
+            tempDir.createVirtualDir().createChildDirectory(this, "ccbase").also { b ->
+                for (sourceSet in listOf("main", "test")) {
+                    (b.findChild("src") ?: b.createChildDirectory(this, "src")).let { it.findChild(sourceSet) ?: it.createChildDirectory(this, sourceSet) }
+                        .createChildDirectory(this, "java").createChildDirectory(this, "ccbase$sourceSet")
+                        .createChildData(this, "A.java").setBinaryContent("package ccbase$sourceSet; class A {}".toByteArray())
+                }
+            }
+        }
+        PsiTestUtil.addContentRoot(createModule("ccbase"), build)
+        for (sourceSet in listOf("main", "test")) {
+            val module = createModule("ccbase.$sourceSet")
+            val root = build.findFileByRelativePath("src/$sourceSet")!!
+            PsiTestUtil.addContentRoot(module, root)
+            PsiTestUtil.addSourceRoot(module, root.findChild("java")!!)
+        }
+        groups().update { model ->
+            model.create("Clear Reports", id = "cr")
+            model.assign(listOf(build.path), "cr")
+        }
+        val pane = object : com.intellij.ide.projectView.impl.PackageViewPane(project) {
+            fun structure() = createStructure()
+        }
+        com.intellij.openapi.util.Disposer.register(testRootDisposable, pane)
+        val text = dump(pane.structure())
+        assertTrue(text, text.contains("\n [group] Clear Reports\n  ccbase\n"))
+        assertFalse(text, Regex("\n ccbase\n").containsMatchIn(text))
+    }
+
     fun testProjectNodesAreRecognized() {
         groups().update { it.create("Reporting", id = "rep") }
         val structure = TestProjectTreeStructure(project, testRootDisposable)

@@ -75,7 +75,13 @@ intellijPlatformTesting {
     runIde {
         // Sandbox IDE with the Multi-Project Workspace plugin (optional integration, not a dependency)
         register("runIdeWithWorkspace") {
-            plugins { plugin("org.jetbrains.plugins.workspace", "262.8665.176") }
+            plugins {
+                plugin("org.jetbrains.plugins.workspace", "262.8665.176")
+                // Local build of Gradle Sync Queue, for workspaces with many linked Gradle builds (skipped if absent)
+                providers.gradleProperty("syncQueuePlugin")
+                    .orElse("${System.getProperty("user.home")}/Downloads/gradle-sync-queue/build/distributions/gradle-sync-queue-1.0.0.zip")
+                    .get().let(::file).takeIf { it.exists() }?.let { localPlugin(it) }
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 package de.inetsoftware.projectviewgroups
 
 import com.intellij.ide.projectView.ProjectViewNode
+import com.intellij.ide.projectView.impl.ModuleGroup
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
@@ -35,6 +36,7 @@ object ProjectNodes {
     fun keyOf(node: AbstractTreeNode<*>): String? = when (val value = node.value) {
         is PsiDirectory -> if (value.isValid) value.virtualFile.path else null
         is Module -> moduleKey(value)
+        is ModuleGroup -> moduleGroupKey(value, node.project ?: return null)
         is GroupId -> null
         else -> (node as? ProjectViewNode<*>)?.virtualFile?.takeIf { it.isValid && it.isDirectory }?.path
     }
@@ -42,6 +44,18 @@ object ProjectNodes {
     private fun moduleKey(module: Module): String? {
         if (module.isDisposed) return null
         return ModuleRootManager.getInstance(module).contentRoots.firstOrNull()?.path ?: "module:${module.name}"
+    }
+
+    /**
+     * A module group such as Gradle's `CCBase` (holding `CCBase.main`, `CCBase.test`, …) in the Packages view:
+     * the directory of the module with the group's name, or else the common directory of the group's modules.
+     */
+    private fun moduleGroupKey(group: ModuleGroup, project: Project): String? {
+        if (project.isDisposed) return null
+        ModuleManager.getInstance(project).findModuleByName(group.qualifiedName)?.let { return moduleKey(it) }
+        val roots = group.modulesInGroup(project, true).flatMap { ModuleRootManager.getInstance(it).contentRoots.asList() }
+        if (roots.isEmpty()) return null
+        return roots.reduce { a, b -> VfsUtilCore.getCommonAncestor(a, b) ?: return null }.path
     }
 
     /** Display name for a key outside the tree. */
