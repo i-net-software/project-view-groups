@@ -8,7 +8,7 @@
     becomes a long flat list. This plugin adds groups above the projects, nested to any depth. Files are not moved;
     the groups only change the view.</p>
     <ul>
-      <li>Works in all views of the Project tool window, including <b>Packages</b></li>
+      <li>Works in the <b>Project</b> and <b>Packages</b> views (not in scope views such as Project Files or Changed Files)</li>
       <li>Works with and without the Multi-Project Workspace plugin</li>
       <li><b>+ | Project Group…</b> in the Project tool window, nested when a group is selected</li>
       <li>Context menu: <i>Move to Group</i>, <i>Remove from Group</i>, <i>Rename Group…</i> (Shift+F6), <i>Delete Group</i> (Delete), <i>Manage Project Groups…</i></li>

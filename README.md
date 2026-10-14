@@ -23,7 +23,8 @@ Every top-level node of a Project tool window view that stands for a directory o
 ## Features
 
 * Groups nest to any depth.
-* All views of the Project tool window: **Project**, **Packages** (with *Show Modules*), **Project Files**, **Production**, **Tests**, …
+* The **Project** and **Packages** views (Packages with *Show Modules*; Gradle builds shown as module groups are recognized).
+* Not in the scope-based views (**Project Files**, **Production**, **Tests**, **All Changed Files**, custom scopes): IntelliJ builds their top level without consulting tree structure providers, so plugins cannot add nodes there.
 * Works with and without the Multi-Project Workspace plugin.
 * **+ | Project Group…** in the Project tool window (and **File | New | Project Group…**). With a group selected, the new group is nested in it.
 * Context menu of projects and groups:
