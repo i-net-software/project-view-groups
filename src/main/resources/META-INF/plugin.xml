@@ -1,0 +1,60 @@
+<idea-plugin>
+    <id>de.inetsoftware.project-view-groups</id>
+    <name>Project View Groups</name>
+    <vendor url="https://www.inetsoftware.de">i-net software</vendor>
+    <description><![CDATA[
+    <p>Groups the projects in the Project tool window, for example by product.</p>
+    <p>In a project with many modules, linked Gradle builds or Multi-Project Workspace projects, the Project tool window
+    becomes a long flat list. This plugin adds groups above the projects, nested to any depth. Files are not moved;
+    the groups only change the view.</p>
+    <ul>
+      <li>Works in all views of the Project tool window, including <b>Packages</b></li>
+      <li>Works with and without the Multi-Project Workspace plugin</li>
+      <li><b>+ | Project Group…</b> in the Project tool window, nested when a group is selected</li>
+      <li>Context menu: <i>Move to Group</i>, <i>Remove from Group</i>, <i>Rename Group…</i> (Shift+F6), <i>Delete Group</i> (Delete), <i>Manage Project Groups…</i></li>
+      <li>Drag projects onto a group</li>
+      <li>Groups are stored per user in the workspace file</li>
+    </ul>
+    ]]></description>
+    <depends>com.intellij.modules.platform</depends>
+    <!-- Not needed for the integration itself; makes this plugin load after it, so our tree structure provider
+         runs after the workspace one and sees the workspace node -->
+    <depends optional="true" config-file="project-view-groups-workspace.xml">org.jetbrains.plugins.workspace</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <treeStructureProvider implementation="de.inetsoftware.projectviewgroups.GroupTreeStructureProvider" order="last"/>
+        <renameHandler implementation="de.inetsoftware.projectviewgroups.GroupRenameHandler"/>
+        <postStartupActivity implementation="de.inetsoftware.projectviewgroups.GroupStartupActivity"/>
+    </extensions>
+
+    <projectListeners>
+        <listener class="de.inetsoftware.projectviewgroups.GroupDropInstaller" topic="com.intellij.ide.projectView.impl.ProjectViewListener"/>
+        <listener class="de.inetsoftware.projectviewgroups.GroupDropInstaller" topic="com.intellij.openapi.wm.ex.ToolWindowManagerListener"/>
+    </projectListeners>
+
+    <actions>
+        <action id="ProjectViewGroups.NewGroup" class="de.inetsoftware.projectviewgroups.NewGroupAction"
+                text="Project Group…" description="Create a group for projects in the Project tool window"
+                icon="AllIcons.Nodes.ModuleGroup">
+            <add-to-group group-id="NewGroup" anchor="last"/>
+        </action>
+        <group id="ProjectViewGroups.PopupGroup">
+            <separator/>
+            <group id="ProjectViewGroups.MoveToGroup" class="de.inetsoftware.projectviewgroups.MoveToGroupActionGroup"
+                   text="Move to Group" description="Move the selected projects or groups into a group" icon="AllIcons.Nodes.ModuleGroup"/>
+            <action id="ProjectViewGroups.RemoveFromGroup" class="de.inetsoftware.projectviewgroups.RemoveFromGroupAction"
+                    text="Remove from Group" description="Move the selected projects or groups to the top level"/>
+            <action id="ProjectViewGroups.RenameGroup" class="de.inetsoftware.projectviewgroups.RenameGroupAction"
+                    text="Rename Group…" description="Rename the selected group" use-shortcut-of="RenameElement"/>
+            <action id="ProjectViewGroups.DeleteGroup" class="de.inetsoftware.projectviewgroups.DeleteGroupAction"
+                    text="Delete Group" description="Delete the selected groups; their projects move up one level" icon="AllIcons.General.Remove"/>
+            <action id="ProjectViewGroups.Manage" class="de.inetsoftware.projectviewgroups.ManageGroupsAction"
+                    text="Manage Project Groups…" description="Create groups and assign projects to them"/>
+            <separator/>
+            <add-to-group group-id="ProjectViewPopupMenu" relative-to-action="WeighingNewGroup" anchor="after"/>
+        </group>
+        <reference ref="ProjectViewGroups.Manage">
+            <add-to-group group-id="ProjectView.ToolWindow.SecondaryActions" anchor="last"/>
+        </reference>
+    </actions>
+</idea-plugin>
